@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from logic4e import *
 from utils4e import expr_handle_infix_ops, count
@@ -152,19 +153,32 @@ class WumpusWorldApp(tk.Tk):
         #self.grid_canvas.create_oval(x1, y1, x2, y2, fill="blue", outline="black", tags="agent")
 
 
+def update_view():
+    things_grid = w.get_world()
+    app.draw_agents(things_grid)
+    w.step()
+
 if __name__ == "__main__":
     def constant_prog(percept):
         return percept
 
     app = WumpusWorldApp(world_size=4)  # Assuming a 4x4 grid
-
-
     w = WumpusEnvironmentT(4)
-    
+
     things_grid = w.get_world()
     app.draw_agents(things_grid)
-    print(things_grid)
-
-
-
     app.mainloop()
+
+    while True:
+        app.after(1000,update_view)
+        
+   
+    
+       
+        
+
+    
+
+
+
+    

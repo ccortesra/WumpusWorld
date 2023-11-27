@@ -328,14 +328,23 @@ class Environment:
         override this method."""
         if not self.is_done():
             actions = []
+            print(self.agents)
             for agent in self.agents:
+                print('pase')
                 if agent.alive:
-                    actions.append(agent.program(self.percept(agent)))
+                    if not (isinstance(agent,Wumpus)):
+                        print("entre")
+                        actions.append(agent.execute(self.percept(agent)))
+                        print(actions)
+                        print(self.agents)
+                    
                 else:
                     actions.append("")
             for (agent, action) in zip(self.agents, actions):
                 self.execute_action(agent, action)
             self.exogenous_change()
+
+            print('ya fue')
 
     def run(self, steps=1000):
         """Run the Environment for given number of time steps."""

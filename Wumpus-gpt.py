@@ -111,6 +111,34 @@ class WumpusEnvironment:
                 frontier.add((cell[0], cell[1] + 1))
 
         return frontier
+    
+    def is_there_adjacent(self, array_cells, cell):
+
+        for pit in array_cells:
+            x_cell = cell[0]
+            y_cell = cell[1]
+
+            x_pit = pit[0]
+            y_pit = pit[1]
+
+            if abs(x_cell-x_pit) < 1 and y_cell-y_pit == 0:
+                return True
+            elif abs(y_cell-y_pit) < 1 and x_cell-y_pit == 0:
+                return True
+        return False       
+    
+    def check_config(self, pit_array, visited):
+        
+        for aux_cell in visited:
+            x_aux = aux_cell[0]
+            y_aux = aux_cell[1]
+            if self.grid[x_aux][y_aux].breeze:
+                if self.is_there_adjacent(pit_array,aux_cell) == False:
+                    return False
+            else:
+                if self.is_there_adjacent(pit_array,aux_cell):
+                    return False
+                
 
     def calculate_configurations(self):
             frontier = self.frontier()

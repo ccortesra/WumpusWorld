@@ -51,10 +51,11 @@ class WumpusEnvironmentT(XYEnvironment):
         "GOLD"
         stuff_pos = self.get_world()
         g_x, g_y = 0,0
-        while ((g_x, g_y) == (0,0)) or (stuff_pos[g_x][g_y] != []) or (g_x in [0,5] or g_y in [0,5]):
+        print('pasé')
+        while ((g_x, g_y) == (0,0)) or (len(stuff_pos[g_x][g_y])>0):
             g_x, g_y = self.random_location_inbounds(exclude=(1, 1))
-        self.add_thing(Gold(), self.random_location_inbounds(exclude=(1, 1)), True)
-
+        self.add_thing(Gold(), (g_x,g_y), True)
+        print('pase')
         "AGENT"
         self.add_thing(HybridWumpusAgent(program), (1, 1), True)
 
@@ -68,6 +69,8 @@ class WumpusEnvironmentT(XYEnvironment):
         else:
             x_end, y_end = self.width - 1, self.height - 1
 
+        print('Rangos x' , x_start, x_end)
+        print('Rangos y', y_start, y_end)
         for x in range(x_start, x_end):
             row = []
             for y in range(y_start, y_end):

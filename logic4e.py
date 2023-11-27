@@ -1095,6 +1095,7 @@ class HybridWumpusAgent(Agent):
         super().__init__(self.execute)
 
     def execute(self, percept):
+        print(self.dimrow)
         self.kb.make_percept_sentence(percept, self.t)
         self.kb.add_temporal_sentences(self.t)
 
@@ -1102,9 +1103,10 @@ class HybridWumpusAgent(Agent):
 
         for i in range(1, self.dimrow + 1):
             for j in range(1, self.dimrow + 1):
-                if self.kb.ask_if_true(location(i, j, self.t)):
-                    temp.append(i)
-                    temp.append(j)
+                print("Holas")
+                #if self.kb.ask_if_true(location(i, j, self.t)):
+                temp.append(i)
+                temp.append(j)
 
         if self.kb.ask_if_true(facing_north(self.t)):
             self.current_position = WumpusPosition(temp[0], temp[1], 'UP')

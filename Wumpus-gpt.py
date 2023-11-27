@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from itertools import product
 
 
 class WumpusAgent:
@@ -24,15 +25,16 @@ class WumpusAgent:
         self.knowledge_base /= np.sum(self.knowledge_base)
 
     def choose_action(self):
+        print("action")
         # Elegir la próxima acción basada en las probabilidades actuales y la lógica difusa
-        max_prob = np.max(self.knowledge_base)
-        max_indices = np.argwhere(self.knowledge_base == max_prob)
+    # max_prob = np.max(self.knowledge_base)
+    # max_indices = np.argwhere(self.knowledge_base == max_prob)
 
-        # Tomar una acción aleatoria entre las celdas con la probabilidad máxima
-        chosen_cell = random.choice(max_indices)
+    # Tomar una acción aleatoria entre las celdas con la probabilidad máxima
+    # chosen_cell = random.choice(max_indices)
 
-        # En este ejemplo, la acción sería simplemente moverse hacia la celda con mayor probabilidad
-        return {'action': 'move', 'target': chosen_cell}
+    # En este ejemplo, la acción sería simplemente moverse hacia la celda con mayor probabilidad
+    # return {'action': 'move', 'target': chosen_cell}
 
 
 class Cell:
@@ -57,13 +59,15 @@ def generate_random_tuple(n):
 
 class WumpusEnvironment:
     def __init__(self, grid_size):
+        self.knowledge_base = [];
         self.pit_probability = 0.2
         self.grid_size = grid_size + 2
-        self.grid = [[Cell(wall=(i == 0 or i == self.grid_size-1 or j == 0 or j == self.grid_size-1)) for j in range(self.grid_size)] for i in range(self.grid_size)]
+        self.grid = [[Cell(wall=(i == 0 or i == self.grid_size - 1 or j == 0 or j == self.grid_size - 1)) for j in
+                      range(self.grid_size)] for i in range(self.grid_size)]
 
         # WUMPUS
         x, y = generate_random_tuple(grid_size)
-        self.wumpus_location = (x,y)
+        self.wumpus_location = (x, y)
         self.grid[x][y].wumpus = True
         self.grid[x - 1][y].stench = True
         self.grid[x][y - 1].stench = True
@@ -73,14 +77,15 @@ class WumpusEnvironment:
         # GOLD
         x, y = generate_random_tuple(grid_size)
         self.grid[x][y].gold = True
-        self.gold_location = (x,y)
-        
+        self.gold_location = (x, y)
+
         # PITS
         self.pits_locations = []
         for x in range(1, self.grid_size - 1):
             for y in range(1, self.grid_size - 1):
-                if random.random() < self.pit_probability and (x, y) != (1, 1) and x != 0 and y != 0 and x != self.grid_size and y != self.grid_size:
-                    self.pits_locations.append((x,y))
+                if random.random() < self.pit_probability and (x, y) != (
+                1, 1) and x != 0 and y != 0 and x != self.grid_size and y != self.grid_size:
+                    self.pits_locations.append((x, y))
                     self.grid[x][y].pit = True
                     self.grid[x - 1][y].brezze = True
                     self.grid[x][y - 1].brezze = True
@@ -90,35 +95,100 @@ class WumpusEnvironment:
         # AGENT
         self.agent_location = (1, 1)  # Inicia el agente en la esquina superior izquierda
 
+
+    def get_breeze_cells(self):
+        breeze_cells = []
+        for x in range(1, self.grid_size - 2):
+            for y in range(1, self.grid_size - 2):
+                cell = self.grid[x][y]
+                if cell.breeze:
+                    breeze_cells.append((x, y))
+        return breeze_cells
+
+
     def get_visited_cells(self):
         visited_cells = []
         for x in range(1, self.grid_size - 2):
             for y in range(1, self.grid_size - 2):
                 cell = self.grid[x][y]
                 if cell.visited:
-                    visited_cells.append((x,y))
+                    visited_cells.append((x, y))
 
         return visited_cells
-    
+
     def get_probability_frontier(self):
         visited_cells = self.get_visited_cells()
         frontier = set()
         for cell in visited_cells:
             if self.grid[cell[0]][cell[1]].brezze:
-                frontier.add((cell[0] - 1, cell[1]))
-                frontier.add((cell[0], cell[1] - 1))
-                frontier.add((cell[0] + 1, cell[1]))
-                frontier.add((cell[0], cell[1] + 1))
+                if (not self.grid[cell[0] - 1][cell[1]].wall) and (not self.grid[cell[0] - 1][cell[1]].visited):
+                    frontier.add((cell[0] - 1, cell[1]))
+
+                if (not self.grid[cell[0]][cell[1] - 1].wall) and (not self.grid[cell[0]][cell[1] - 1].visited):
+                    frontier.add((cell[0], cell[1] - 1))
+
+                if (not self.grid[cell[0] + 1][cell[1]].wall) and (not self.grid[cell[0] + 1][cell[1]].visited):
+                    frontier.add((cell[0] + 1, cell[1]))
+
+                if (not self.grid[cell[0]][cell[1] + 1].wall) and (not self.grid[cell[0]][cell[1] + 1].visited):
+                    frontier.add((cell[0], cell[1] + 1))
 
         return frontier
 
-    def calculate_configurations(self):
-            frontier = self.frontier()
+    def calculate_configurations_pit(self, x, y):
+        frontier = self.get_probability_frontier()
+        # Lista de elementos booleanos
+        booleanos = [True, False]
 
-            for frontier_cell in frontier:
-                for other_frontier in frontier:
-                    if other_frontier != frontier_cell:
-                            
+        # Generar todas las combinaciones posibles
+
+        combinaciones = list(product(booleanos, repeat=len(frontier)-1))
+        print(combinaciones)
+        configuraciones = []
+        for combinacion  in combinaciones:
+            configuracion = []
+            posicion_celda = 0
+            i = 0
+            for celda in frontier:
+                if celda[0] == x and celda[1] == y:
+                    configuracion.append((celda[0], celda[1]))
+                    continue
+                if(combinacion[posicion_celda]):
+                    configuracion.append((celda[0], celda[1]))
+
+                posicion_celda += 1
+
+            configuraciones.append(configuracion)
+
+        return configuraciones
+
+    def calculate_configurations_no_pit(self, x, y):
+        frontier = self.get_probability_frontier()
+        # Lista de elementos booleanos
+        booleanos = [True, False]
+
+        # Generar todas las combinaciones posibles
+
+        combinaciones = list(product(booleanos, repeat=len(frontier)-1))
+        print(combinaciones)
+        configuraciones = []
+        for combinacion  in combinaciones:
+            configuracion = []
+            posicion_celda = 0
+            i = 0
+            for celda in frontier:
+                if celda[0] == x and celda[1] == y:
+                    continue
+                if(not combinacion[posicion_celda]):
+                    configuracion.append((celda[0], celda[1]))
+
+                posicion_celda += 1
+
+            configuraciones.append(configuracion)
+
+        return configuraciones
+
+
 
 
     def get_percept(self):
@@ -134,7 +204,7 @@ class WumpusEnvironment:
         if tuple(self.agent_location) in adjacent_cells_wumpus:
             percept['stench'] = True
 
-        for pit_location in self.pit_locations:
+        for pit_location in self.pits_locations:
             adjacent_cells_pit = [
                 (pit_location[0] + 1, pit_location[1]),
                 (pit_location[0] - 1, pit_location[1]),
@@ -144,6 +214,11 @@ class WumpusEnvironment:
             if tuple(self.agent_location) in adjacent_cells_pit:
                 percept['breeze'] = True
 
+        self.grid[1][1].visited = 1
+        self.grid[1][2].visited = 1
+        self.grid[2][1].visited = 1
+        self.grid[1][2].brezze = 1
+        self.grid[2][1].brezze = 1
         if tuple(self.agent_location) == self.gold_location:
             percept['glitter'] = True
 
@@ -177,13 +252,18 @@ def main():
 
     while True:  # Bucle infinito
         percept = environment.get_percept()
-        agent.update_probabilities(percept)
+        # agent.update_probabilities(percept)
+        frontier = environment.get_probability_frontier()
+
+        for cell in frontier:
+            configuraciones_pit = environment.calculate_configurations_pit(cell[0], cell[1])
+            configuraciones_no_pit = environment.calculate_configurations_no_pit(cell[0], cell[1])
         action = agent.choose_action()
 
         # Interacción manual
         print(f"Posición actual del agente: {environment.agent_location}")
         print(f"Posición actual del Wumpus: {environment.wumpus_location}")
-        print(f"Posiciones de los agujeros: {environment.pit_locations}")
+        print(f"Posiciones de los agujeros: {environment.pits_locations}")
         print(f"Posición del oro: {environment.gold_location}")
         print(f"Percepto actual: {percept}")
         print(f"Acción elegida: {action}")
